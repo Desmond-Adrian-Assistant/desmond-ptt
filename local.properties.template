@@ -1,11 +1,15 @@
-# Telegram Bot Configuration
+# Telegram Configuration
 # Copy this file to local.properties and fill in the values
 
-# Bot token from @BotFather
+# Bot token from @BotFather (fallback sender)
 telegram.botToken=YOUR_BOT_TOKEN_HERE
 
 # Your Telegram user ID (or chat ID)
 telegram.chatId=YOUR_CHAT_ID_HERE
+
+# TDLib API credentials from https://my.telegram.org
+telegram.apiId=YOUR_API_ID_HERE
+telegram.apiHash=YOUR_API_HASH_HERE
 
 # Android SDK path (auto-detected by Android Studio, or set manually)
 # sdk.dir=/Users/yourusername/Library/Android/sdk

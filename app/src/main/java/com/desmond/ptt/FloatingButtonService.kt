@@ -17,6 +17,7 @@ import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.os.PowerManager
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -35,6 +36,7 @@ class FloatingButtonService : Service() {
     private lateinit var floatingView: View
     private lateinit var micButton: ImageView
     private lateinit var vibrator: Vibrator
+    private lateinit var wakeLock: PowerManager.WakeLock
     private val handler = Handler(Looper.getMainLooper())
     
     private var audioRecorder: AudioRecorder? = null
@@ -68,6 +70,14 @@ class FloatingButtonService : Service() {
             getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
 
+        // Acquire partial wake lock to keep CPU alive for TDLib connection
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "DesmondPTT::FloatingService"
+        )
+        wakeLock.acquire()
+        
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification())
         createFloatingButton()
@@ -135,24 +145,24 @@ class FloatingButtonService : Service() {
                 }
                 
                 MotionEvent.ACTION_MOVE -> {
-                    val dx = event.rawX - initialTouchX
-                    val dy = event.rawY - initialTouchY
-                    
-                    if (!isDragging && (kotlin.math.abs(dx) > DRAG_THRESHOLD || kotlin.math.abs(dy) > DRAG_THRESHOLD)) {
-                        // Crossed drag threshold — cancel recording, enter drag mode
-                        isDragging = true
-                        handler.removeCallbacks(recordingRunnable)
-                        if (recordingTriggered) {
-                            // Cancel recording if it already started
-                            cancelRecording()
-                            recordingTriggered = false
+                    // Once recording is active, ignore all movement — just wait for finger lift
+                    if (recordingTriggered) {
+                        // Do nothing — locked in recording mode
+                    } else {
+                        val dx = event.rawX - initialTouchX
+                        val dy = event.rawY - initialTouchY
+                        
+                        if (!isDragging && (kotlin.math.abs(dx) > DRAG_THRESHOLD || kotlin.math.abs(dy) > DRAG_THRESHOLD)) {
+                            // Crossed drag threshold before recording started — enter drag mode
+                            isDragging = true
+                            handler.removeCallbacks(recordingRunnable)
                         }
-                    }
-                    
-                    if (isDragging) {
-                        params.x = initialX - dx.toInt()
-                        params.y = initialY + dy.toInt()
-                        windowManager.updateViewLayout(floatingView, params)
+                        
+                        if (isDragging) {
+                            params.x = initialX - dx.toInt()
+                            params.y = initialY + dy.toInt()
+                            windowManager.updateViewLayout(floatingView, params)
+                        }
                     }
                     true
                 }
@@ -376,6 +386,10 @@ class FloatingButtonService : Service() {
         isRunning = false
         audioRecorder?.cancel()
         stopSpinAnimation()
+        
+        if (::wakeLock.isInitialized && wakeLock.isHeld) {
+            wakeLock.release()
+        }
         
         try {
             windowManager.removeView(floatingView)

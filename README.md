@@ -28,23 +28,33 @@ Built for talking to AI assistants hands-free — hold the floating button, spea
 3. Go to "API development tools"
 4. Create an application — note the **API ID** and **API Hash**
 
-### 2. Install the APK
+### 2. Configure Credentials
 
-Download the latest APK from [Releases](https://github.com/Desmond-Adrian-Assistant/desmond-ptt/releases) and install on your Android device.
+```bash
+cp local.properties.template local.properties
+# Edit local.properties with your values:
+#   telegram.apiId=YOUR_API_ID
+#   telegram.apiHash=YOUR_API_HASH
+#   telegram.botToken=YOUR_BOT_TOKEN   (optional fallback)
+#   telegram.chatId=YOUR_CHAT_ID       (optional fallback)
+```
 
-> **Compatibility:** The APK is built for **ARM64 (arm64-v8a)** only, which covers ~95% of modern Android phones (2018+). It will **not** work on old 32-bit ARM devices, x86 Android emulators, or x86 Chromebooks. If you need other architectures, build from source with additional ABI targets.
+### 3. Install the APK
 
-### 3. First Launch
+Build from source (see below) or download from [Releases](https://github.com/Desmond-Adrian-Assistant/desmond-ptt/releases).
+
+> **Compatibility:** ARM64 (arm64-v8a) only — covers ~95% of modern Android phones (2018+). Will not work on 32-bit ARM, x86 emulators, or x86 Chromebooks.
+
+### 4. First Launch
 
 The app will walk you through setup:
 
-1. **API Credentials** — enter your API ID and Hash
-2. **Target Chat** — username of the bot/chat to send voice messages to
-3. **Webhook** (optional) — URL for server-side transcription
+1. **Target Chat** — username of the bot/chat to send voice messages to
+2. **Webhook** (optional) — URL for server-side transcription
 
 After setup, grant permissions (overlay, microphone, notifications) and tap **Start Floating Button**.
 
-### 4. Use It
+### 5. Use It
 
 - **Hold** the floating button to record
 - **Release** to send

@@ -2,12 +2,14 @@ package com.desmond.ptt
 
 import android.content.Context
 import android.util.Log
+import com.desmond.ptt.BuildConfig
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * TDLib-based Telegram client for sending messages as a user (not a bot).
@@ -37,14 +39,14 @@ object TelegramClient {
     
     private var pendingPhoneNumber: String? = null
     private var targetChatId: Long? = null
+    // Track pending sends: local message ID → callback
+    private val pendingSends = ConcurrentHashMap<Long, (Boolean) -> Unit>()
     
     fun initialize(context: Context) {
         if (isInitialized) return
         
-        if (!AppConfig.hasApiCredentials()) {
-            _authState.value = AuthState.Error("API credentials not configured. Run setup first.")
-            return
-        }
+        val apiId = BuildConfig.TELEGRAM_API_ID
+        val apiHash = BuildConfig.TELEGRAM_API_HASH
         
         Log.d(TAG, "Initializing TDLib...")
         
@@ -64,8 +66,8 @@ object TelegramClient {
                 useChatInfoDatabase = true
                 useMessageDatabase = true
                 useSecretChats = false
-                apiId = AppConfig.apiId
-                apiHash = AppConfig.apiHash
+                this.apiId = apiId
+                this.apiHash = apiHash
                 systemLanguageCode = "en"
                 deviceModel = "Android"
                 applicationVersion = "1.0"
@@ -92,6 +94,20 @@ object TelegramClient {
         when (update) {
             is TdApi.UpdateAuthorizationState -> {
                 handleAuthState(update.authorizationState)
+            }
+            is TdApi.UpdateMessageSendSucceeded -> {
+                val oldId = update.oldMessageId
+                pendingSends.remove(oldId)?.let { cb ->
+                    Log.d(TAG, "Message $oldId confirmed sent (new id: ${update.message.id})")
+                    cb(true)
+                }
+            }
+            is TdApi.UpdateMessageSendFailed -> {
+                val oldId = update.oldMessageId
+                Log.e(TAG, "Message $oldId FAILED: ${update.error.message}")
+                pendingSends.remove(oldId)?.let { cb ->
+                    cb(false)
+                }
             }
             else -> {}
         }
@@ -161,7 +177,7 @@ object TelegramClient {
         }
         
         // Otherwise search by username
-        val username = AppConfig.targetChatUsername
+        val username = AppConfig.targetChatUsername.ifEmpty { "DesmondAdrianBot" }
         if (username.isNotEmpty()) {
             client?.send(TdApi.SearchPublicChat(username)) { result ->
                 when (result) {
@@ -218,8 +234,17 @@ object TelegramClient {
         client?.send(sendMessage) { result ->
             when (result) {
                 is TdApi.Message -> {
-                    Log.d(TAG, "Voice message sent! ID: ${result.id}")
-                    callback(true)
+                    // Message queued locally — wait for UpdateMessageSendSucceeded/Failed
+                    Log.d(TAG, "Voice message queued locally, ID: ${result.id}, waiting for server confirm...")
+                    pendingSends[result.id] = callback
+                    // Timeout: if no confirmation in 15 seconds, treat as failure
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(15_000)
+                        pendingSends.remove(result.id)?.let { cb ->
+                            Log.e(TAG, "Send timed out for message ${result.id}")
+                            cb(false)
+                        }
+                    }
                 }
                 is TdApi.Error -> {
                     Log.e(TAG, "Failed to send voice: ${result.message}")

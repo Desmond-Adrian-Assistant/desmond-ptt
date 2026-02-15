@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import android.text.InputType
 import android.view.View
@@ -122,7 +123,10 @@ class MainActivity : AppCompatActivity() {
         
         setContentView(layout)
         
-        setupStep = 0
+        // Load API credentials from BuildConfig and skip to target chat step
+        AppConfig.apiId = BuildConfig.TELEGRAM_API_ID
+        AppConfig.apiHash = BuildConfig.TELEGRAM_API_HASH
+        setupStep = 1
         
         fun showStep() {
             when (setupStep) {
@@ -172,19 +176,9 @@ class MainActivity : AppCompatActivity() {
         nextButton.setOnClickListener {
             when (setupStep) {
                 0 -> {
-                    val apiIdStr = input1.text.toString().trim()
-                    val apiHash = input2.text.toString().trim()
-                    if (apiIdStr.isEmpty() || apiHash.isEmpty()) {
-                        Toast.makeText(this, "Both API ID and Hash are required", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                    val apiId = apiIdStr.toIntOrNull()
-                    if (apiId == null || apiId <= 0) {
-                        Toast.makeText(this, "API ID must be a number", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-                    AppConfig.apiId = apiId
-                    AppConfig.apiHash = apiHash
+                    // API credentials from BuildConfig — skip straight to step 1
+                    AppConfig.apiId = BuildConfig.TELEGRAM_API_ID
+                    AppConfig.apiHash = BuildConfig.TELEGRAM_API_HASH
                     setupStep = 1
                     showStep()
                 }
@@ -435,6 +429,16 @@ class MainActivity : AppCompatActivity() {
                 )
                 return false
             }
+        }
+
+        // Request battery optimization exemption
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            @Suppress("BatteryLife")
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            startActivity(intent)
         }
 
         return true

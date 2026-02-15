@@ -20,8 +20,8 @@ android {
         applicationId = "com.desmond.ptt"
         minSdk = 26
         targetSdk = 34
-        versionCode = 8
-        versionName = "3.4"
+        versionCode = 36
+        versionName = "3.6"
         
         // Only include ARM64 to reduce APK size (Z Fold 7 is arm64-v8a)
         ndk {
@@ -31,6 +31,8 @@ android {
         // Telegram config from local.properties
         buildConfigField("String", "TELEGRAM_BOT_TOKEN", "\"${localProperties.getProperty("telegram.botToken", "")}\"")
         buildConfigField("String", "TELEGRAM_CHAT_ID", "\"${localProperties.getProperty("telegram.chatId", "")}\"")
+        buildConfigField("int", "TELEGRAM_API_ID", localProperties.getProperty("telegram.apiId", "0"))
+        buildConfigField("String", "TELEGRAM_API_HASH", "\"${localProperties.getProperty("telegram.apiHash", "")}\"")
     }
 
     buildTypes {
