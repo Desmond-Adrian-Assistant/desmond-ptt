@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
  * Handles uploading voice recordings to Telegram.
  * 
  * Primary: TDLib (sends as the authenticated user)
- * Fallback: Bot API + optional webhook (configurable via AppConfig)
+ * Fallback: Bot API (sends as bot)
  */
 object TelegramUploader {
     
@@ -60,29 +60,20 @@ object TelegramUploader {
                         Log.d(TAG, "TDLib send successful!")
                         success = true
                     } else {
-                        Log.w(TAG, "TDLib send failed, falling back to webhook...")
+                        Log.w(TAG, "TDLib send failed, falling back to bot API...")
                     }
                 }
                 
-                // Fallback: webhook (for transcription) + bot API (for audio playback)
+                // Fallback: Bot API
                 if (!success) {
-                    Log.d(TAG, "Using fallback (webhook + bot)...")
-                    
-                    // Send to Telegram bot if configured
+                    Log.d(TAG, "Using bot API fallback...")
                     val botToken = AppConfig.botToken
                     val botChatId = AppConfig.botChatId
                     if (botToken.isNotEmpty() && botChatId.isNotEmpty()) {
-                        val telegramOk = sendToTelegramBot(audioFile, botToken, botChatId)
-                        Log.d(TAG, "Telegram bot send: $telegramOk")
-                        success = telegramOk
-                    }
-                    
-                    // Send to webhook if configured
-                    val webhookUrl = AppConfig.webhookUrl
-                    if (webhookUrl.isNotEmpty()) {
-                        val webhookOk = sendToWebhook(audioFile, webhookUrl)
-                        Log.d(TAG, "Webhook send: $webhookOk")
-                        success = success || webhookOk
+                        success = sendToTelegramBot(audioFile, botToken, botChatId)
+                        Log.d(TAG, "Bot API send: $success")
+                    } else {
+                        Log.e(TAG, "No bot credentials configured for fallback")
                     }
                 }
             } catch (e: Exception) {
@@ -134,35 +125,6 @@ object TelegramUploader {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Telegram error", e)
-            false
-        }
-    }
-    
-    private fun sendToWebhook(audioFile: File, webhookUrl: String): Boolean {
-        Log.d(TAG, "Sending to webhook: $webhookUrl")
-        
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart(
-                "audio",
-                audioFile.name,
-                audioFile.asRequestBody("audio/mp4".toMediaType())
-            )
-            .build()
-        
-        val request = Request.Builder()
-            .url(webhookUrl)
-            .post(requestBody)
-            .build()
-        
-        return try {
-            val response = client.newCall(request).execute()
-            response.use { resp ->
-                Log.d(TAG, "Webhook response: ${resp.code}")
-                resp.isSuccessful
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Webhook error", e)
             false
         }
     }

@@ -147,24 +147,13 @@ class MainActivity : AppCompatActivity() {
                     nextButton.text = "Next"
                 }
                 1 -> {
-                    subtitle.text = "Step 2/3: Target Chat"
+                    subtitle.text = "Step 2/2: Target Chat"
                     input1.hint = "Bot/chat username (e.g. MyBot)"
                     input1.inputType = InputType.TYPE_CLASS_TEXT
                     input1.text.clear()
                     input2.visibility = View.GONE
                     linkText.visibility = View.VISIBLE
                     linkText.text = "Username of the bot or chat to send voice messages to"
-                    linkText.setOnClickListener(null)
-                    nextButton.text = "Next"
-                }
-                2 -> {
-                    subtitle.text = "Step 3/3: Optional Settings"
-                    input1.hint = "Webhook URL (optional)"
-                    input1.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
-                    input1.text.clear()
-                    input2.visibility = View.GONE
-                    linkText.visibility = View.VISIBLE
-                    linkText.text = "Optional: URL to send audio for server-side transcription"
                     linkText.setOnClickListener(null)
                     nextButton.text = "Finish Setup"
                 }
@@ -189,14 +178,6 @@ class MainActivity : AppCompatActivity() {
                         return@setOnClickListener
                     }
                     AppConfig.targetChatUsername = username
-                    setupStep = 2
-                    showStep()
-                }
-                2 -> {
-                    val webhook = input1.text.toString().trim()
-                    if (webhook.isNotEmpty()) {
-                        AppConfig.webhookUrl = webhook
-                    }
                     AppConfig.isSetupComplete = true
                     Toast.makeText(this, "✅ Setup complete!", Toast.LENGTH_LONG).show()
                     showMainUI()
@@ -290,15 +271,6 @@ class MainActivity : AppCompatActivity() {
         })
         layout.addView(chatInput)
         
-        val webhookInput = EditText(this).apply {
-            hint = "Webhook URL (optional)"
-            setText(AppConfig.webhookUrl)
-        }
-        layout.addView(TextView(this).apply {
-            text = "\nWebhook URL:"
-        })
-        layout.addView(webhookInput)
-        
         AlertDialog.Builder(this)
             .setTitle("⚙️ PTT Settings")
             .setView(layout)
@@ -309,7 +281,6 @@ class MainActivity : AppCompatActivity() {
                 if (newChat.isNotEmpty() && newChat != AppConfig.targetChatUsername) {
                     TelegramClient.setTargetChat(newChat)
                 }
-                AppConfig.webhookUrl = webhookInput.text.toString().trim()
                 Toast.makeText(this, "Settings saved", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)

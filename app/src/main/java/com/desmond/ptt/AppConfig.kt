@@ -19,7 +19,6 @@ object AppConfig {
     private const val KEY_TARGET_CHAT_ID = "target_chat_id"
     private const val KEY_BOT_TOKEN = "bot_token"
     private const val KEY_BOT_CHAT_ID = "bot_chat_id"
-    private const val KEY_WEBHOOK_URL = "webhook_url"
     private const val KEY_HOLD_DELAY = "hold_delay_ms"
     private const val KEY_MIN_RECORDING = "min_recording_ms"
     private const val KEY_SETUP_COMPLETE = "setup_complete"
@@ -72,10 +71,6 @@ object AppConfig {
     var botChatId: String
         get() = prefs?.getString(KEY_BOT_CHAT_ID, "") ?: ""
         set(value) { prefs?.edit()?.putString(KEY_BOT_CHAT_ID, value)?.apply() }
-    
-    var webhookUrl: String
-        get() = prefs?.getString(KEY_WEBHOOK_URL, "") ?: ""
-        set(value) { prefs?.edit()?.putString(KEY_WEBHOOK_URL, value)?.apply() }
     
     var holdDelayMs: Long
         get() = prefs?.getLong(KEY_HOLD_DELAY, 400L) ?: 400L

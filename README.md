@@ -13,10 +13,9 @@ Built for talking to AI assistants hands-free — hold the floating button, spea
 - **Smart hold detection** — distinguishes taps, holds, and drags
 - **Visual feedback** — recording (red), sending (orange spin), success (green), error (red)
 - **Haptic feedback** — vibration on record start/stop
-- **Configurable** — hold delay, min recording duration, target chat, webhook URL
+- **Configurable** — hold delay, min recording duration, target chat
 - **Encrypted config** — credentials stored in Android EncryptedSharedPreferences
-- **First-launch setup wizard** — guided API credential entry
-- **Optional webhook** — send audio to a server for transcription (Whisper, etc.)
+- **First-launch setup wizard** — guided setup
 - **Fallback to Bot API** — if TDLib auth isn't complete, falls back to bot
 
 ## Quick Start
@@ -50,7 +49,6 @@ Build from source (see below) or download from [Releases](https://github.com/Des
 The app will walk you through setup:
 
 1. **Target Chat** — username of the bot/chat to send voice messages to
-2. **Webhook** (optional) — URL for server-side transcription
 
 After setup, grant permissions (overlay, microphone, notifications) and tap **Start Floating Button**.
 
@@ -72,16 +70,13 @@ After setup, grant permissions (overlay, microphone, notifications) and tap **St
                                               │  ┌─ Bot API ─┐   │
                                               │  │ (fallback) │   │
                                               │  └───────────┘   │
-                                              │  ┌─ Webhook ─┐   │
-                                              │  │ (optional) │   │
-                                              │  └───────────┘   │
                                               └─────────────────┘
 ```
 
 - **FloatingButtonService** — foreground service managing the overlay, touch handling, drag vs hold detection
 - **AudioRecorder** — records audio via MediaRecorder (AAC in MPEG-4 container)
 - **TelegramClient** — TDLib wrapper handling auth flow and message sending
-- **TelegramUploader** — orchestrates sending: TDLib → Bot API → Webhook fallback chain
+- **TelegramUploader** — orchestrates sending: TDLib → Bot API fallback chain
 - **AppConfig** — EncryptedSharedPreferences for all credentials and settings
 - **MainActivity** — setup wizard + auth flow UI + service toggle
 
@@ -131,24 +126,6 @@ cd desmond-ptt
 # APK will be at app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Server-Side Webhook (Optional)
-
-The `server/` directory contains a Node.js webhook server that:
-1. Receives audio uploads from the app
-2. Transcribes with OpenAI Whisper (local CLI)
-3. Optionally sends transcription confirmation via Telegram
-
-```bash
-cd server
-
-# Set environment variables
-export TELEGRAM_BOT_TOKEN="your-bot-token"
-export TELEGRAM_CHAT_ID="your-chat-id"
-
-# Run
-node ptt-webhook.js
-```
-
 ## Settings
 
 Long-press the Start/Stop button in the app to access settings:
@@ -158,15 +135,11 @@ Long-press the Start/Stop button in the app to access settings:
 | Hold delay | 400ms | How long to hold before recording starts |
 | Min recording | 500ms | Minimum recording duration (shorter = discarded) |
 | Target chat | — | Telegram username to send voice to |
-| Webhook URL | — | Optional server URL for audio transcription |
-
 ## Privacy
 
 - **Microphone**: Used only while you hold the PTT button. No background recording.
 - **Overlay**: Required for the floating button to appear over other apps.
 - **Telegram API**: Your credentials are stored locally in encrypted storage. Voice messages are sent directly to Telegram servers via TDLib — no intermediary.
-- **Webhook** (if configured): Audio is sent to your specified server URL for transcription. This is optional and off by default.
-
 ## Credits
 
 - [TDLib](https://github.com/tdlib/td) — Telegram Database Library by Telegram

@@ -20,8 +20,8 @@ android {
         applicationId = "com.desmond.ptt"
         minSdk = 26
         targetSdk = 34
-        versionCode = 36
-        versionName = "3.6"
+        versionCode = 37
+        versionName = "3.7"
         
         // Only include ARM64 to reduce APK size (Z Fold 7 is arm64-v8a)
         ndk {
