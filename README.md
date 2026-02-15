@@ -30,7 +30,9 @@ Built for talking to AI assistants hands-free — hold the floating button, spea
 
 ### 2. Install the APK
 
-Download the latest APK from [Releases](https://github.com/ayedreeean/desmond-ptt/releases) and install on your Android device.
+Download the latest APK from [Releases](https://github.com/Desmond-Adrian-Assistant/desmond-ptt/releases) and install on your Android device.
+
+> **Compatibility:** The APK is built for **ARM64 (arm64-v8a)** only, which covers ~95% of modern Android phones (2018+). It will **not** work on old 32-bit ARM devices, x86 Android emulators, or x86 Chromebooks. If you need other architectures, build from source with additional ABI targets.
 
 ### 3. First Launch
 
