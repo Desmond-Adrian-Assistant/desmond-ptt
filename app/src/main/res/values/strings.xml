@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Desmond PTT</string>
+    <string name="widget_name">Desmond Walkie-Talkie</string>
+    <string name="ptt_notification_channel">PTT Service</string>
+    <string name="ptt_notification_title">Desmond PTT Active</string>
+    <string name="ptt_notification_text">Hold Volume Down to talk</string>
+    <string name="recording">Recording…</string>
+    <string name="sending">Sending to Desmond…</string>
+    <string name="ready">Ready</string>
+</resources>

@@ -1,0 +1,32 @@
+# Android build
+.gradle/
+build/
+app/build/
+*.apk
+*.aab
+*.ap_
+
+# Local config (contains secrets)
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Native libraries (too large for git — see README for build instructions)
+app/src/main/jniLibs/
+
+# TDLib generated Java API (4.5MB — see README for build instructions)
+app/src/main/java/org/drinkless/tdlib/TdApi.java
+
+# Keystore
+*.jks
+*.keystore
+
+# Misc
+*.log
+*.tmp
+captures/
+.externalNativeBuild/
+.cxx/
